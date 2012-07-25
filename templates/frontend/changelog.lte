@@ -1,0 +1,7 @@
+<div id="changelog_container">
+  {if $use_markdown}
+    {$changelog}
+  {else}
+    <pre>{$changelog}</pre>
+  {/if}
+</div>

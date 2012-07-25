@@ -1,0 +1,17 @@
+<div class="feed">
+  {$i=0}
+  {foreach $messages message}
+    {$i=$i+1}
+    <div class="feed_item">
+      <h3><a href="{$message.link}" target="_blank">{$message.subject}</a></h3>
+			<div class="feed_item_date">{$message.date}</div>
+			<div class="feed_item_content">
+        {$message.message}
+      </div>      
+       <div class="feed_item_continue"><a href="{$message.link}">Weiterlesen ...</a></div>
+		</div>
+  {/foreach}
+  {if $i == 0}
+    <p><em>- es gibt keine Mitteilungen in dieser Gruppe! -</em></p>
+  {/if}
+</div>

@@ -1,0 +1,42 @@
+<div id="issues_container">
+  {foreach $issues issue}
+  <div class="issue_item">
+    <div class="issue_avatar">
+      <img src="{$issue.user.avatar.url}" width="{$issue.user.avatar.size}" height="{$issue.user.avatar.size}" alt="{$issue.user.login}" />
+    </div>
+    <div class="issue_content">
+      <div class="issue_id">
+        <a href="{$issue.url}" target="_blank">Ticket #{$issue.number}</a> - <span class="issue_title">{$issue.title}</span>
+      </div>
+		  <div class="issue_date">
+        {$issue.created_at} - {$issue.user.login}
+      </div>
+		  <div class="issue_body">
+        {$issue.body}
+      </div>
+      {if $issue.comments.count > 0}
+      <div class="issue_comments_container">
+        {foreach $issue.comments.comments comment}
+        <div class="issue_comment_item">
+          <div class="issue_comment_avatar">
+            <img src="{$comment.user.avatar.url}" width="{$comment.user.avatar.size}" height="{$comment.user.avatar.size}" alt="{$comment.user.login}" />
+          </div>
+          <div class="issue_comment_content">
+            <div class="issue_comment_date">
+              {$comment.created_at} - {$comment.user.login}
+            </div>
+            <div class="issue_comment_body">
+              {$comment.body}
+            </div>
+          </div>
+        </div>
+        {/foreach}
+      </div>
+      {/if}
+    </div>
+  </div>
+  {/foreach}
+  {if $issues_count == 0}
+  <p><em>- z.Zt. liegen keine Fehlermeldungen oder Verbesserungsvorschläge vor -</em></p>
+  {/if}
+</div>

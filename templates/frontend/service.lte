@@ -1,0 +1,59 @@
+<h1>{$page_title}</h1>
+<div id="accordion">
+	<h2><a href="#">Download der Installationsdatei</a></h2>
+	<div class="content">
+    <p><a href="https://addons.phpmanufaktur.de/download.php?file={$repository}" target="_blank">Download der aktuellen Installationsdatei für {$repository}</a></p>
+    <p>Installationsdateien von früheren {$repository} Versionen finden Sie auf der <a href="https://github.com/phpmanufaktur/{$repository}/downloads" target="_blank">GitHub Projektseite unter Downloads</a></p>
+    <p>Insgesamt wurde {$repository} bereits <strong>[[github_download_count?repository={$repository}]]</strong> mal heruntergeladen.</p> 
+  </div>
+  
+  <h2><a href="#">Hilfe und Unterstützung, Erfahrungen austauschen</a></h2>
+	<div class="content">
+    <div class="feed_intro">
+      <p>Sie möchten die weitere Entwicklung von {$repository} verfolgen, über Neuigkeiten informiert werden, Tipps & Tricks erfahren sowie Unterstützung bei Problemen in der Anwendung erhalten?</p>
+      <p>Werden Sie Mitglied in der <a href="https:://phpmanufaktur.de/support" target="_blank">Addons Support Gruppe der phpManufaktur</a>. Sie befinden sich dort im unmittelbaren Kontakt mit den Teammitgliedern und anderen Anwendern, alle Fragen werden möglichst rasch beantwortet.</p>
+    </div>
+    <div class="feed_excerpt">
+      <p>Ein Auszug aus den letzten Mitteilungen in der Support Gruppe:</p>
+    </div>
+    {$messages}
+	</div>
+  
+	<h2><a href="#">Changelog, aktueller Entwicklungsstand</a></h2>
+	<div class="content">
+    <p>Das Änderungsprotokoll informiert Sie über neue oder geänderte Funktionen sowie über behobene Probleme und Fehler.</p>
+    {$changelog}
+	</div>
+
+	<h2><a href="#">Bekannte Fehler und Probleme, Ticket Status</a></h2>
+	<div class="content">
+    <p>Eine Liste mit Verbesserungsvorschlägen sowie Informationen über offene und behobene Fehler & Probleme finden Sie auf der <a href="https://github.com/phpmanufaktur/{$repository}/issues" target="_blank">{$repository} Projektseite</a>.</p>
+    <p>Einen Auszug aus den letzten <em>offenen</em> Meldungen sehen Sie hier:</p>
+    {$issues}
+	</div>
+
+	<h2><a href="#">Neue Fehler und Probleme melden, Verbesserungsvorschläge</a></h2>
+	<div class="content">Helfen Sie mit {$repository} kontinuierlich weiter zu entwickeln und zu verbessern!
+		<ul>
+			<li>Sie verfügen über einen <a href="https://github.com" target="_blank">GitHub Account</a>? Bitte teilen Sie uns Fehler und Verbesserungsvorschläge direkt über die <a href="https://github.com/phpmanufaktur.de/{$repository}/issues" target="_blank">{$repository} Projektseite</a> mit.</li>
+			<li>Alternativ nutzen Sie bitte unser <a href="https://addons.phpmanufaktur.de/de/service.php">Service Formular</a> oder die <a href="https://phpmanufaktur.de/support" target="_blank">Addons Support Group</a> um Probleme mit {$repository} zu melden und neue Funktionen vorzuschlagen.</li>
+		</ul>
+    <p>Das Team prüft Ihre Mitteilung, veranlasst weitere Schritte und setzt sich mit Ihnen in Verbindung.</p>
+	</div>
+
+  <h2><a href="#">Repository, Quellen für Entwickler und Designer</a></h2>
+	<div class="content">
+    <p>Als Programmierer, Webdesigner oder interessierter Anwender steht Ihnen auf der <a href="https://github.com/phpmanufaktur/{$repository}" target="_blank">GitHub Projektseite für {$repository}</a> ein direkter Zugriff auf alle aktuellen Quelldateien zur Verfügung.</p>
+    <p>Sie können sich unmittelbar an der weiteren Entwicklung von {$repository} beteiligen und Einfluss nehmen.</p>
+    <p><em>Wir freuen uns auf Sie!</em></p>
+  </div>
+
+	
+{*
+	<h2><a href="#">Internet Usergroup Berlin</a></h2>
+	<div class="content">Vieles lässt sich einfacher erklären und besprechen, wenn man gemeinsam an einem Tisch sitzt. Nehmen Sie doch einfach mal an einem Treffen der Internet Usergroup Belin teil!</div>
+
+	<h2><a href="#">Premiumservice</a></h2>
+	<div class="content">Sie möchten sich mit der ganzen Technik nicht belasten? Sie brauchen Unterstützung bei der Umsetzung und Realisierung Ihrer Ideen? Sprechen Sie uns an, wir helfen Ihnen!</div>
+*}  
+</div>
