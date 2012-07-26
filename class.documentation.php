@@ -34,6 +34,8 @@ if (!is_object($parser)) {
 }
 
 require_once WB_PATH.'/modules/manufaktur_special/class.phpmanufaktur.php';
+require_once WB_PATH.'/modules/droplets_extension/interface.php';
+
 
 class phpManufakturDocumentation {
 
@@ -41,6 +43,7 @@ class phpManufakturDocumentation {
   protected static $repository = '';
   protected static $page = 1;
   protected static $image_URL = '';
+  protected static $page_id = -1;
 
   private static $error = '';
 
@@ -53,13 +56,15 @@ class phpManufakturDocumentation {
   public function getParams() {
     return array(
         'repository' => self::$repository,
-        'page' => self::$page
+        'page' => self::$page,
+        'page_id' => self::$page_id
         );
   } // getParams()
 
   public function setParams($params) {
     if (isset($params['repository'])) self::$repository = $params['repository'];
     if (isset($params['page'])) self::$page = $params['page'];
+    if (isset($params['page_id'])) self::$page_id = $params['page_id'];
   } // setParams()
 
   /**
@@ -199,10 +204,33 @@ class phpManufakturDocumentation {
           "`id` INT(11) NOT NULL AUTO_INCREMENT, ".
           "`repository` VARCHAR(255) NOT NULL DEFAULT '', ".
           "`page` INT(11) NOT NULL DEFAULT '1', ".
+          "`page_id` INT(11) NOT NULL DEFAULT '-1', ".
           "`content` LONGTEXT NOT NULL, ".
           "`timestamp` TIMESTAMP, ".
           "PRIMARY KEY (`id`), ".
-          "KEY (`repository`,`page`) ".
+          "KEY (`repository`,`page`,`page_id`) ".
+          ") ENGINE=MyIsam AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci";
+      if (null == $database->query($SQL)) {
+        $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
+        return false;
+      }
+    }
+
+    // check if table exists
+    $SQL = "SHOW TABLES LIKE 'addons_tpl_manufaktur_intro_cache'";
+    if (null == ($query = $database->query($SQL))) {
+      $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
+      return false;
+    }
+    if ($query->fetchRow(MYSQL_ASSOC) < 1) {
+      $SQL = "CREATE TABLE IF NOT EXISTS `addons_tpl_manufaktur_intro_cache` ( ".
+          "`id` INT(11) NOT NULL AUTO_INCREMENT, ".
+          "`repository` VARCHAR(255) NOT NULL DEFAULT '', ".
+          "`page_id` INT(11) NOT NULL DEFAULT '-1', ".
+          "`content` LONGTEXT NOT NULL, ".
+          "`timestamp` TIMESTAMP, ".
+          "PRIMARY KEY (`id`), ".
+          "KEY (`repository`,`page_id`) ".
           ") ENGINE=MyIsam AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci";
       if (null == $database->query($SQL)) {
         $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
@@ -434,7 +462,6 @@ class phpManufakturDocumentation {
           'image' => $topic['image']
       );
     }
-    //$SQL = "SELECT `page_title` FROM `addons_pages` WHERE `page_id`='".PAGE_ID."'";
     $SQL = "SELECT `page_title` FROM `addons_pages` WHERE `link`='/de/name/".strtolower(self::$repository)."/documentation'";
     $page_title = $database->get_one($SQL, MYSQL_ASSOC);
     $data = array(
@@ -460,10 +487,14 @@ class phpManufakturDocumentation {
         $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
         return false;
       }
+      if (self::$page_id < 1) {
+        $SQL = "SELECT `page_id` FROM `addons_pages` WHERE `link`='/de/name/".strtolower(self::$repository)."/documentation'";
+        self::$page_id = $database->get_one($SQL, MYSQL_ASSOC);
+      }
       if ($id > 0) {
         // don't use sanitize here - this will disturb the formatted code examples! Use mysql_real_escape_string()!
-        $SQL = sprintf("UPDATE `addons_tpl_manufaktur_article_cache` SET `content`='%s' WHERE `id`='%d'",
-            mysql_real_escape_string($content), $id);
+        $SQL = sprintf("UPDATE `addons_tpl_manufaktur_article_cache` SET `content`='%s',`page_id`='%d' WHERE `id`='%d'",
+            mysql_real_escape_string($content), self::$page_id, $id);
         // update the article cache
         if (!$database->query($SQL)) {
           $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
@@ -472,21 +503,42 @@ class phpManufakturDocumentation {
       }
       else {
         // don't use sanitize here - this will disturb the formatted code examples! Use mysql_real_escape_string()!
-        $SQL = sprintf("INSERT INTO `addons_tpl_manufaktur_article_cache` (`repository`,`page`,`content`) VALUES ('%s','%d','%s')",
-            strtolower(self::$repository), self::$page, mysql_real_escape_string($content));
+        $SQL = sprintf("INSERT INTO `addons_tpl_manufaktur_article_cache` (`repository`,`page`,`content`,`page_id`) VALUES ('%s','%d','%s','%d')",
+            strtolower(self::$repository), self::$page, mysql_real_escape_string($content), self::$page_id);
         // add a new article cache
         if (!$database->query($SQL)) {
           $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
           return false;
         }
       }
+      // register the droplet for the search!
+      if (!is_registered_droplet_search('addons_articles', self::$page_id)) {
+        register_droplet_search('addons_articles', self::$page_id, 'manufaktur_special');
+      }
     }
     return true;
   } // showArticles
 
-  public function showIntro() {
+  public function showIntro($use_cache=true) {
     global $database;
-    $content = array();
+
+    if ($use_cache) {
+      // get the complete content from the database if possible
+      $SQL = sprintf("SELECT `content` FROM `addons_tpl_manufaktur_intro_cache` WHERE `repository`='%s'",
+          strtolower(self::$repository));
+      $content = $database->get_one($SQL, MYSQL_ASSOC);
+      if ($database->is_error()) {
+        $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
+        return false;
+      }
+      if (!empty($content)) {
+        // don't use unsanitize here - this will disturb the formatted code examples in the articles!
+        $content = stripcslashes($content);
+        // return the complete content
+        return $content;
+      }
+    }
+
     $SQL = sprintf("SELECT `topic_id` FROM `addons_tpl_manufaktur_articles` WHERE `repository`='%s' AND `type`='INTRO'",
         strtolower(self::$repository));
     $id = $database->get_one($SQL, MYSQL_ASSOC);
@@ -528,7 +580,7 @@ class phpManufakturDocumentation {
       );
     }
     // get the page title
-    $SQL = "SELECT `page_title` FROM `addons_pages` WHERE `page_id`='".PAGE_ID."'";
+    $SQL = "SELECT `page_title` FROM `addons_pages` WHERE `link`='/de/name/".strtolower(self::$repository)."/about'";
     $page_title = $database->get_one($SQL, MYSQL_ASSOC);
 
     $data = array(
@@ -537,7 +589,50 @@ class phpManufakturDocumentation {
         'image_url' => self::$image_URL,
         'article' => $content
         );
-    return $this->getTemplate('intro.lte', $data);
+    $content = $this->getTemplate('intro.lte', $data);
+    if ($use_cache) {
+      // return the content
+      return $content;
+    }
+    else {
+      // save the content
+      $SQL = sprintf("SELECT `id` FROM `addons_tpl_manufaktur_intro_cache` WHERE `repository`='%s'",
+          strtolower(self::$repository));
+      $id = $database->get_one($SQL, MYSQL_ASSOC);
+      if ($database->is_error()) {
+        $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
+        return false;
+      }
+      if (self::$page_id < 1) {
+        $SQL = "SELECT `page_id` FROM `addons_pages` WHERE `link`='/de/name/".strtolower(self::$repository)."/about'";
+        self::$page_id = $database->get_one($SQL, MYSQL_ASSOC);
+      }
+      if ($id > 0) {
+        // don't use sanitize here - this will disturb the formatted code examples! Use mysql_real_escape_string()!
+        $SQL = sprintf("UPDATE `addons_tpl_manufaktur_intro_cache` SET `content`='%s',`page_id`='%d' WHERE `id`='%d'",
+            mysql_real_escape_string($content), self::$page_id, $id);
+        // update the article cache
+        if (!$database->query($SQL)) {
+          $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
+          return false;
+        }
+      }
+      else {
+        // don't use sanitize here - this will disturb the formatted code examples! Use mysql_real_escape_string()!
+        $SQL = sprintf("INSERT INTO `addons_tpl_manufaktur_intro_cache` (`repository`,`page_id`,`content`) VALUES ('%s','%d','%s')",
+            strtolower(self::$repository), self::$page_id, mysql_real_escape_string($content));
+        // add a new article cache
+        if (!$database->query($SQL)) {
+          $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
+          return false;
+        }
+      }
+      // register the droplet for the search!
+      if (!is_registered_droplet_search('addons_intro', self::$page_id)) {
+        register_droplet_search('addons_intro', self::$page_id, 'manufaktur_special');
+      }
+    }
+    return true;
   } // showIntro()
 
 } // class phpManufakturService

@@ -1,10 +1,13 @@
 <?php
 
+set_time_limit(0);
+ignore_user_abort(true);
+
 // LEPTON config.php einbinden
-require_once('../../../config.php');
+require_once('../../config.php');
 
 
-require_once WB_PATH.'/templates/phpmanufaktur_2012/scripts/class.documentation.php';
+require_once WB_PATH.'/modules/manufaktur_special/class.documentation.php';
 
 global $database;
 
@@ -59,7 +62,8 @@ while (false !== ($repos = $rp->fetchRow(MYSQL_ASSOC))) {
   foreach ($pages as $page) {
     $params = array(
         'repository' => $repository,
-        'page' => $page
+        'page' => $page,
+        'page_id' => -1
         );
     $doc->setParams($params);
     if (!$doc->showArticles(false))

@@ -35,6 +35,7 @@ if (!is_object($parser)) {
 
 // need libSimplePie for RSS feeds
 require_once WB_PATH.'/modules/lib_simplepie/SimplePie/SimplePie.compiled.php';
+require_once WB_PATH.'/modules/droplets_extension/interface.php';
 
 
 class phpManufakturService {
@@ -439,6 +440,7 @@ class phpManufakturService {
     if ($query->fetchRow(MYSQL_ASSOC) < 1) {
       $SQL = "CREATE TABLE IF NOT EXISTS `addons_tpl_manufaktur_service` ( ".
           "`id` INT(11) NOT NULL AUTO_INCREMENT, ".
+          "`page_id` INT(11) NOT NULL DEFAULT '-1', ".
           "`repository` VARCHAR(255) NOT NULL DEFAULT '', ".
           "`content` LONGTEXT NOT NULL, ".
           "`timestamp` TIMESTAMP, ".
@@ -462,12 +464,19 @@ class phpManufakturService {
   protected function saveContent($content) {
     global $database;
 
-    $SQL = sprintf("INSERT INTO `addons_tpl_manufaktur_service` (`repository`,`content`) VALUES ('%s','%s') ON DUPLICATE KEY UPDATE `content`='%s'",
-      self::$repository, self::sanitizeVariable($content), self::sanitizeVariable($content));
+    $SQL = "SELECT `page_id` FROM `addons_pages` WHERE `link`='/de/name/".strtolower(self::$repository)."/support'";
+    $page_id = $database->get_one($SQL, MYSQL_ASSOC);
+
+    $SQL = sprintf("INSERT INTO `addons_tpl_manufaktur_service` (`repository`,`content`,`page_id`) VALUES ('%s','%s','%d') ON DUPLICATE KEY UPDATE `content`='%s',`page_id`='%d'",
+      self::$repository, self::sanitizeVariable($content), $page_id, self::sanitizeVariable($content), $page_id);
 
     if (null == $database->query($SQL)) {
       $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
       return false;
+    }
+    // register the droplet for the search!
+    if (!is_registered_droplet_search('addons_service_page', $page_id)) {
+      register_droplet_search('addons_service_page', $page_id, 'manufaktur_special');
     }
     return true;
   } // saveContent()
