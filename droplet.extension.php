@@ -87,6 +87,7 @@ if (! function_exists('manufaktur_special_droplet_search')) {
     else {
       $text = strip_tags(stripcslashes($intro['content']));
     }
+    $text = str_replace('||', '', $text);
     // create the result array
     $result = array();
     $result[] = array(
