@@ -182,7 +182,7 @@ class phpManufakturDocumentation {
           "`page` INT(11) NOT NULL DEFAULT '1', ".
           "`topic_id` INT(11) NOT NULL DEFAULT '-1', ".
           "`published_when` INT(11) NOT NULL DEFAULT '-1', ".
-          "`type` ENUM ('INTRO','ARTICLE','TIPP') DEFAULT 'ARTICLE', ".
+          "`type` ENUM ('INTRO','ARTICLE','TIPP','VIDEO') DEFAULT 'ARTICLE', ".
           "`timestamp` TIMESTAMP, ".
           "PRIMARY KEY (`id`), ".
           "KEY (`repository`,`topic_id`) ".
@@ -314,6 +314,8 @@ class phpManufakturDocumentation {
             $type = 'INTRO';
           elseif (in_array('tipp', $keywords))
             $type = 'TIPP';
+          elseif (in_array('video', $keywords))
+            $type = 'VIDEO';
           $page = 1;
           for ($i=1; $i < 11; $i++) {
             if (in_array("page_$i", $keywords)) {
@@ -425,7 +427,7 @@ class phpManufakturDocumentation {
           $readme = "<p>- no README.md available -</p>";
         }
         // important: we dont want to execute any droplet from README, so sanitize them !!!
-        $readme = str_replace(array('[[',']]'), array('&#x005b;&#x005b;','&#x005d;&#x005d;'), $readme);
+        $readme = str_replace(array('[[',']]','||'), array('&#x005b;&#x005b;','&#x005d;&#x005d;','&#x007c;&#x007c;'), $readme);
         $content[] = array(
             'id' => -1,
             'title' => 'README (from GitHub)',
@@ -568,8 +570,8 @@ class phpManufakturDocumentation {
       if (false === ($readme = $service->getREADME())) {
         $readme = "<p>- no README.md available -</p>";
       }
-      // important: we dont want to execute any droplet from README, so sanitize them !!!
-      $readme = str_replace(array('[[',']]'), array('&#x005b;&#x005b;','&#x005d;&#x005d;'), $readme);
+      // important: we dont want to execute any droplet or glossary item from README, so sanitize them !!!
+      $readme = str_replace(array('[[',']]','||'), array('&#x005b;&#x005b;','&#x005d;&#x005d;','&#x007c;&#x007c;'), $readme);
       $content = array(
           'id' => -1,
           'title' => 'README (from GitHub)',

@@ -11,12 +11,12 @@
 	<div class="content">
     <div class="feed_intro">
       <p>Sie möchten die weitere Entwicklung von {$repository} verfolgen, über Neuigkeiten informiert werden, Tipps & Tricks erfahren sowie Unterstützung bei Problemen in der Anwendung erhalten?</p>
-      <p>Werden Sie Mitglied in der <a href="https:://phpmanufaktur.de/support" target="_blank">Addons Support Gruppe der phpManufaktur</a>. Sie befinden sich dort im unmittelbaren Kontakt mit den Teammitgliedern und anderen Anwendern, alle Fragen werden möglichst rasch beantwortet.</p>
+      <p>Werden Sie Mitglied in der <a href="https://phpmanufaktur.de/support" target="_blank">Addons Support Gruppe der phpManufaktur</a>. Sie befinden sich dort im unmittelbaren Kontakt mit den Teammitgliedern und anderen Anwendern, alle Fragen werden möglichst rasch beantwortet.</p>
     </div>
     <div class="feed_excerpt">
       <p>Ein Auszug aus den letzten Mitteilungen in der Support Gruppe:</p>
-    </div>
-    {$messages}
+    </div> 
+    {$messages} 
 	</div>
   
 	<h2><a href="#">Changelog, aktueller Entwicklungsstand</a></h2>
@@ -35,7 +35,7 @@
 	<h2><a href="#">Neue Fehler und Probleme melden, Verbesserungsvorschläge</a></h2>
 	<div class="content">Helfen Sie mit {$repository} kontinuierlich weiter zu entwickeln und zu verbessern!
 		<ul>
-			<li>Sie verfügen über einen <a href="https://github.com" target="_blank">GitHub Account</a>? Bitte teilen Sie uns Fehler und Verbesserungsvorschläge direkt über die <a href="https://github.com/phpmanufaktur.de/{$repository}/issues" target="_blank">{$repository} Projektseite</a> mit.</li>
+			<li>Sie verfügen über einen <a href="https://github.com" target="_blank">GitHub Account</a>? Bitte teilen Sie uns Fehler und Verbesserungsvorschläge direkt über die <a href="https://github.com/phpmanufaktur/{$repository}/issues" target="_blank">{$repository} Projektseite</a> mit.</li>
 			<li>Alternativ nutzen Sie bitte unser <a href="https://addons.phpmanufaktur.de/de/service.php">Service Formular</a> oder die <a href="https://phpmanufaktur.de/support" target="_blank">Addons Support Group</a> um Probleme mit {$repository} zu melden und neue Funktionen vorzuschlagen.</li>
 		</ul>
     <p>Das Team prüft Ihre Mitteilung, veranlasst weitere Schritte und setzt sich mit Ihnen in Verbindung.</p>
