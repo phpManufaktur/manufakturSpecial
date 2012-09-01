@@ -18,7 +18,7 @@ if (defined('WB_PATH')) {
   }
 }
 // end include class.secure.php
-
+ 
 if (!class_exists('Dwoo'))
   require_once WB_PATH.'/modules/dwoo/include.php';
 
@@ -166,7 +166,7 @@ class phpManufakturService {
             'subject' => $item->get_title(),
             'link' => $item->get_permalink(),
             'date' => $item->get_date('d.m.Y - H:i'),
-            'message' => $item->get_content()
+            'message' => strip_tags($item->get_content())
             );
       }
     }
