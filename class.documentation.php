@@ -182,6 +182,7 @@ class phpManufakturDocumentation {
           "`page` INT(11) NOT NULL DEFAULT '1', ".
           "`topic_id` INT(11) NOT NULL DEFAULT '-1', ".
           "`published_when` INT(11) NOT NULL DEFAULT '-1', ".
+          "`posted_modified` INT(11) NOT NULL DEFAULT '-1', ".
           "`type` ENUM ('INTRO','ARTICLE','TIPP','VIDEO') DEFAULT 'ARTICLE', ".
           "`timestamp` TIMESTAMP, ".
           "PRIMARY KEY (`id`), ".
@@ -246,7 +247,7 @@ class phpManufakturDocumentation {
    * @param string $content
    * @return boolean
    */
-  protected function saveArticle($repository, $topic_id, $type, $published_when, $page) {
+  protected function saveArticle($repository, $topic_id, $type, $published_when, $page, $posted_modified) {
     global $database;
 
     $SQL = sprintf("SELECT `id` FROM `addons_tpl_manufaktur_articles` WHERE `repository`='%s' AND `topic_id`='%d'",
@@ -258,16 +259,16 @@ class phpManufakturDocumentation {
     }
     if (intval($id) > 0) {
       // update existing record
-      $SQL = sprintf("UPDATE `addons_tpl_manufaktur_articles` SET `type`='%s', `published_when`='%d', `page`='%d' WHERE `id`='%d'",
-          $type, $published_when, $page, $id);
+      $SQL = sprintf("UPDATE `addons_tpl_manufaktur_articles` SET `type`='%s', `published_when`='%d', `page`='%d', `posted_modified`='%d' WHERE `id`='%d'",
+          $type, $published_when, $page, $id, $posted_modified);
       if (!$database->query($SQL)) {
         $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
         return false;
       }
     }
     else {
-      $SQL = sprintf("INSERT INTO `addons_tpl_manufaktur_articles` (`topic_id`,`repository`,`type`,`published_when`,`page`) VALUES ('%d','%s','%s','%d','%d')",
-          $topic_id, $repository, $type, $published_when, $page);
+      $SQL = sprintf("INSERT INTO `addons_tpl_manufaktur_articles` (`topic_id`,`repository`,`type`,`published_when`,`page`,`posted_modified`) VALUES ('%d','%s','%s','%d','%d','%d')",
+          $topic_id, $repository, $type, $published_when, $page, $posted_modified);
       if (!$database->query($SQL)) {
         $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
         return false;
@@ -290,7 +291,7 @@ class phpManufakturDocumentation {
       $repositories[] = strtolower($repository['repository']);
 
     // get the topics
-    $SQL = "SELECT `topic_id`,`keywords`,`published_when` FROM `blog_mod_topics` WHERE `active`='4' AND `section_id`>'0'";
+    $SQL = "SELECT `topic_id`,`keywords`,`published_when`,`posted_modified` FROM `blog_mod_topics` WHERE `active`='4' AND `section_id`>'0'";
     if (null == ($query = $database->query($SQL))) {
       $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
       return false;
@@ -323,7 +324,7 @@ class phpManufakturDocumentation {
               break;
             }
           }
-          if (!$this->saveArticle($keyword, $topic['topic_id'], $type, $topic['published_when'], $page)) {
+          if (!$this->saveArticle($keyword, $topic['topic_id'], $type, $topic['published_when'], $page, $topic['posted_modified'])) {
             $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $database->get_error()));
             return false;
           }
@@ -373,7 +374,7 @@ class phpManufakturDocumentation {
     return true;
   } // getTopicArticle()
 
-  public function showArticles($use_cache=true) {
+  public function showArticles($use_cache=true, $access_token='') {
     global $database;
 
     if ($use_cache) {
@@ -423,6 +424,8 @@ class phpManufakturDocumentation {
       else {
         // missing intro - load the README.md from GitHub...
         $service = new phpManufakturService(self::$repository);
+        $service::$access_token = $access_token;
+
         if (false === ($readme = $service->getREADME())) {
           $readme = "<p>- no README.md available -</p>";
         }
@@ -521,7 +524,7 @@ class phpManufakturDocumentation {
     return true;
   } // showArticles
 
-  public function showIntro($use_cache=true) {
+  public function showIntro($use_cache=true, $access_token='') {
     global $database;
 
     if ($use_cache) {
@@ -567,6 +570,7 @@ class phpManufakturDocumentation {
     else {
       // missing intro - load the README.md from GitHub...
       $service = new phpManufakturService(self::$repository);
+      $service::$access_token = $access_token;
       if (false === ($readme = $service->getREADME())) {
         $readme = "<p>- no README.md available -</p>";
       }

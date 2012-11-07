@@ -18,7 +18,7 @@ if (defined('WB_PATH')) {
   }
 }
 // end include class.secure.php
- 
+
 if (!class_exists('Dwoo'))
   require_once WB_PATH.'/modules/dwoo/include.php';
 
@@ -48,6 +48,11 @@ class phpManufakturService {
   protected static $avatar_size = 50;
   protected static $avatar_small_size = 30;
 
+  private static $config_file = '';
+  public static $config = array();
+  public static $x_ratelimit_min = 5;
+  public static $access_token = '';
+
   private static $error = '';
 
   public function __construct($repository) {
@@ -55,6 +60,8 @@ class phpManufakturService {
     self::$rss_feed_support_group = 'http://groups.google.com/group/phpmanufaktur-support/feed/rss_v2_0_msgs.xml?num=3';
     self::$user = 'phpManufaktur';
     self::$repository = $repository;
+    self::$config_file = WB_PATH.'/modules/'.basename(dirname(__FILE__)).'/config.json';
+    self::$config = $this->readConfiguration();
     $this->checkTable();
   } // __construct()
 
@@ -96,6 +103,41 @@ class phpManufakturService {
   } // isError
 
   /**
+   * Write the configuration file in json format
+   *
+   * @param array $config
+   * @return boolean
+   */
+  public function writeConfiguration($config) {
+    if (!file_put_contents(self::$config_file, json_encode($config))) {
+      $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf('Error writing the configuration file %s', self::$config_file)));
+      return false;
+    }
+    return true;
+  } // writeConfiguration()
+
+  /**
+   * Read the configuration file
+   *
+   * @return boolean|array FALSE on error or array with the configuration data
+   */
+  public function readConfiguration() {
+    if (!file_exists(self::$config_file)) {
+      //$this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, sprintf('The configuration file %s does not exists!', self::$config_file)));
+      return false;
+    }
+    if (false === ($result = file_get_contents(self::$config_file))) {
+      $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, 'Error reading the configuration file %s.', self::$config_file));
+      return false;
+    }
+
+    $result = json_decode($result, true);
+    return $result;
+  } // readConfiguration()
+
+
+
+  /**
    * Get the template, set the data and return the compiled result
    *
    * @param string $template the name of the template
@@ -132,6 +174,9 @@ class phpManufakturService {
       $command = $get;
     else
       $command = "https://api.github.com$get?callback=return";
+    if (!empty(self::$access_token)) {
+      $command .= '&access_token='.self::$access_token;
+    }
     if (!empty($params)) {
       $command .= '&'.http_build_query($params);
     }
@@ -184,6 +229,16 @@ class phpManufakturService {
   protected function getCHANGELOG() {
     $command = '/repos/'.self::$user.'/'.self::$repository.'/contents/CHANGELOG';
     $worker = $this->gitGet($command);
+    if (isset($worker['meta']['X-RateLimit-Remaining'])) {
+      self::$config['X-RateLimit-Remaining'] = $worker['meta']['X-RateLimit-Remaining'];
+      self::$config['last_addon'] = self::$repository;
+      self::$config['last_execution'] = date('Y-m-d H:i:s');
+      if (!$this->writeConfiguration(self::$config)) return false;
+      if ($worker['meta']['X-RateLimit-Remaining'] < self::$x_ratelimit_min) {
+        $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, 'Exceed X-RateLimit!'));
+        return false;
+      }
+    }
     if (!isset($worker['meta']['status'])) {
       $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, 'Error connecting to GitHub!'));
       return false;
@@ -388,6 +443,7 @@ class phpManufakturService {
     }
 
     // create content
+
     if (false === ($changelog = $this->getCHANGELOG())) {
       $this->setError(sprintf('[%s - %s] %s', __METHOD__, __LINE__, $this->getError()));
       return false;
